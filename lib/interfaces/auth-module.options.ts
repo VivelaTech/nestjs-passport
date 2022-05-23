@@ -25,4 +25,5 @@ export class AuthModuleOptions implements IAuthModuleOptions {
   defaultStrategy?: string | string[];
   session?: boolean;
   property?: string;
+  body?: boolean;
 }
