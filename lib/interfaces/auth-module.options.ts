@@ -4,6 +4,7 @@ export interface IAuthModuleOptions<T = any> {
   defaultStrategy?: string | string[];
   session?: boolean;
   property?: string;
+  body?: boolean;
   [key: string]: any;
 }
 
