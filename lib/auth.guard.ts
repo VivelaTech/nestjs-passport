@@ -62,9 +62,9 @@ function createAuthGuard(type?: string | string[]): Type<CanActivate> {
 
       if (options.body) {
         request.body[options.property || defaultOptions.property] = user;
-      } else {
-        request[options.property || defaultOptions.property] = user;
       }
+
+      request[options.property || defaultOptions.property] = user;
 
       return true;
     }

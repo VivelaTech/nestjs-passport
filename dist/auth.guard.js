@@ -50,9 +50,7 @@ function createAuthGuard(type) {
                 if (options.body) {
                     request.body[options.property || options_1.defaultOptions.property] = user;
                 }
-                else {
-                    request[options.property || options_1.defaultOptions.property] = user;
-                }
+                request[options.property || options_1.defaultOptions.property] = user;
                 return true;
             });
         }
