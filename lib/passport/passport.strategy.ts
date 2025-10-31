@@ -1,14 +1,86 @@
 import * as passport from 'passport';
-import { Type } from '../interfaces';
+import { Type, WithoutCallback } from '../interfaces';
 
-export function PassportStrategy<T extends Type<any> = any>(
+export type AllConstructorParameters<T> = T extends {
+  new (...o: infer U): void;
+  new (...o: infer U2): void;
+  new (...o: infer U3): void;
+  new (...o: infer U4): void;
+  new (...o: infer U5): void;
+  new (...o: infer U6): void;
+  new (...o: infer U7): void;
+}
+  ? U | U2 | U3 | U4 | U5 | U6 | U7
+  : T extends {
+        new (...o: infer U): void;
+        new (...o: infer U2): void;
+        new (...o: infer U3): void;
+        new (...o: infer U4): void;
+        new (...o: infer U5): void;
+        new (...o: infer U6): void;
+      }
+    ? U | U2 | U3 | U4 | U5 | U6
+    : T extends {
+          new (...o: infer U): void;
+          new (...o: infer U2): void;
+          new (...o: infer U3): void;
+          new (...o: infer U4): void;
+          new (...o: infer U5): void;
+        }
+      ? U | U2 | U3 | U4 | U5
+      : T extends {
+            new (...o: infer U): void;
+            new (...o: infer U2): void;
+            new (...o: infer U3): void;
+            new (...o: infer U4): void;
+          }
+        ? U | U2 | U3 | U4
+        : T extends {
+              new (...o: infer U): void;
+              new (...o: infer U2): void;
+              new (...o: infer U3): void;
+            }
+          ? U | U2 | U3
+          : T extends {
+                new (...o: infer U): void;
+                new (...o: infer U2): void;
+              }
+            ? U | U2
+            : T extends {
+                  new (...o: infer U): void;
+                }
+              ? U
+              : never;
+
+abstract class PassportStrategyMixin<TValidationResult> {
+  abstract validate(
+    ...args: any[]
+  ): TValidationResult | Promise<TValidationResult>;
+}
+
+/**
+ * @publicApi
+ */
+export function PassportStrategy<
+  T extends Type<any> = any,
+  TUser = unknown,
+  TValidationResult = TUser | false | null
+>(
   Strategy: T,
-  name?: string | undefined
+  name?: string,
+  callbackArity?: true | number
 ): {
-  new (...args): InstanceType<T>;
+  new (
+    ...args: WithoutCallback<AllConstructorParameters<T>>
+  ): InstanceType<T> & PassportStrategyMixin<TValidationResult>;
 } {
-  abstract class MixinStrategy extends Strategy {
-    abstract validate(...args: any[]): any;
+  abstract class StrategyWithMixin
+    extends Strategy
+    implements PassportStrategyMixin<TValidationResult>
+  {
+    abstract validate(
+      ...args: any[]
+    ): TValidationResult | Promise<TValidationResult>;
 
     constructor(...args: any[]) {
       const callback = async (...params: any[]) => {
@@ -24,17 +96,17 @@ export function PassportStrategy<T extends Type<any> = any>(
           done(err, null);
         }
       };
-      /** 
-       * Commented out due to the regression it introduced
-       * Read more here: https://github.com/nestjs/passport/issues/446
-       
+
+      if (callbackArity !== undefined) {
         const validate = new.target?.prototype?.validate;
+        const arity =
+          callbackArity === true ? validate.length + 1 : callbackArity;
         if (validate) {
           Object.defineProperty(callback, 'length', {
-            value: validate.length + 1
+            value: arity
           });
         }
-      */
+      }
       super(...args, callback);
 
       const passportInstance = this.getPassportInstance();
@@ -49,5 +121,5 @@ export function PassportStrategy<T extends Type<any> = any>(
       return passport;
     }
   }
-  return MixinStrategy;
+  return StrategyWithMixin;
 }
