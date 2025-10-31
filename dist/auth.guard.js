@@ -42,7 +42,7 @@ function createAuthGuard(type) {
             ];
             const passportFn = createPassportContext(request, response);
             const user = await passportFn(type || this.options.defaultStrategy, options, (err, user, info, status) => this.handleRequest(err, user, info, context, status));
-            if (options.body) {
+            if (options.body && request.body) {
                 request.body[options.property || options_1.defaultOptions.property] = user;
             }
             request[options.property || options_1.defaultOptions.property] = user;
